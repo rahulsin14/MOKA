@@ -1,0 +1,46 @@
+# Deploy the full Next.js app + Postgres on Render.
+# Dashboard: New → Blueprint → connect this repo.
+# Docs: https://render.com/docs/blueprint-spec
+
+# Note: Render's free Postgres plan may not be available in all regions.
+# Alternative: create a free DB on https://neon.tech and paste DATABASE_URL below.
+
+databases:
+  - name: moka-db
+    plan: basic_256mb
+    databaseName: moka
+    user: moka
+
+services:
+  - type: web
+    name: moka-web
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npx prisma generate && npx prisma migrate deploy && npm run build
+    startCommand: npm run start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: moka-db
+          property: connectionString
+      - key: AUTH_SECRET
+        generateValue: true
+      - key: AUTH_URL
+        sync: false
+      - key: NEXTAUTH_URL
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: NEXT_PUBLIC_RAZORPAY_KEY_ID
+        sync: false
+      - key: ALLOW_DEMO_PAYMENTS
+        value: "false"
