@@ -1,8 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/components/providers/CartProvider";
+import { ProductImage } from "@/components/store/ProductImage";
 import { formatINR, parseImages } from "@/lib/utils";
 
 type ProductCardProps = {
@@ -24,7 +24,7 @@ export function ProductCard({ product }: ProductCardProps) {
     <article className="group">
       <Link href={`/products/${product.slug}`} className="block">
         <div className="relative aspect-[3/4] overflow-hidden bg-[var(--surface)]">
-          <Image
+          <ProductImage
             src={image}
             alt={product.name}
             fill

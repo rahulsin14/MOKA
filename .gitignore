@@ -46,3 +46,7 @@ prisma/dev.db-journal
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# uploaded product images (local disk mode)
+/public/uploads/*
+!/public/uploads/.gitkeep

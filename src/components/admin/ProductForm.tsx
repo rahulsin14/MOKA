@@ -1,8 +1,10 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { X } from "lucide-react";
 import { parseImages } from "@/lib/utils";
+import { ProductImage } from "@/components/store/ProductImage";
 
 type ProductFormProps = {
   product?: {
@@ -21,21 +23,60 @@ type ProductFormProps = {
 
 export function ProductForm({ product }: ProductFormProps) {
   const router = useRouter();
+  const fileRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
-  const existingImages = product ? parseImages(product.images) : [];
+  const [images, setImages] = useState<string[]>(() =>
+    product ? parseImages(product.images) : []
+  );
+  const [urlDraft, setUrlDraft] = useState("");
+
+  function addUrl() {
+    const url = urlDraft.trim();
+    if (!url) return;
+    setImages((prev) => [...prev, url]);
+    setUrlDraft("");
+  }
+
+  function removeImage(index: number) {
+    setImages((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  async function handleFiles(files: FileList | null) {
+    if (!files?.length) return;
+    setUploading(true);
+    setError("");
+
+    try {
+      for (const file of Array.from(files)) {
+        const body = new FormData();
+        body.append("file", file);
+        const res = await fetch("/api/upload", { method: "POST", body });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Upload failed");
+        setImages((prev) => [...prev, data.url as string]);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  }
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
     setError("");
 
-    const form = new FormData(e.currentTarget);
-    const imageUrls = String(form.get("images"))
-      .split("\n")
-      .map((s) => s.trim())
-      .filter(Boolean);
+    if (images.length === 0) {
+      setError("Add at least one image (upload or URL)");
+      setLoading(false);
+      return;
+    }
 
+    const form = new FormData(e.currentTarget);
     const body = {
       name: String(form.get("name")),
       description: String(form.get("description")),
@@ -43,7 +84,7 @@ export function ProductForm({ product }: ProductFormProps) {
       compareAt: form.get("compareAt")
         ? Math.round(Number(form.get("compareAt")) * 100)
         : null,
-      images: imageUrls,
+      images,
       category: String(form.get("category")),
       collection: String(form.get("collection") || "") || null,
       featured: form.get("featured") === "on",
@@ -136,17 +177,76 @@ export function ProductForm({ product }: ProductFormProps) {
           />
         </div>
       </div>
-      <div>
-        <label className="label">Image URLs (one per line)</label>
-        <textarea
-          name="images"
-          required
-          rows={4}
-          defaultValue={existingImages.join("\n")}
-          className="input font-mono text-sm"
-          placeholder="https://…"
-        />
+
+      <div className="space-y-4 border border-[var(--line)] bg-white p-4">
+        <p className="label mb-0">Product images</p>
+        <p className="text-sm text-[var(--muted)]">
+          Upload files and/or paste image URLs. At least one image is required.
+        </p>
+
+        {images.length > 0 && (
+          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {images.map((src, index) => (
+              <li
+                key={`${src.slice(0, 40)}-${index}`}
+                className="relative aspect-[3/4] overflow-hidden bg-[var(--surface)]"
+              >
+                <ProductImage src={src} alt={`Image ${index + 1}`} fill className="object-cover" />
+                <button
+                  type="button"
+                  onClick={() => removeImage(index)}
+                  className="absolute right-1 top-1 rounded-full bg-black/70 p-1 text-white"
+                  aria-label="Remove image"
+                >
+                  <X size={14} />
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <div>
+          <label className="label">Upload from device</label>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+            multiple
+            className="input cursor-pointer file:mr-3 file:border-0 file:bg-[var(--surface)] file:px-3 file:py-1 file:text-sm"
+            disabled={uploading}
+            onChange={(e) => handleFiles(e.target.files)}
+          />
+          {uploading && (
+            <p className="mt-2 text-sm text-[var(--muted)]">Uploading…</p>
+          )}
+        </div>
+
+        <div>
+          <label className="label">Or paste image URL</label>
+          <div className="flex gap-2">
+            <input
+              value={urlDraft}
+              onChange={(e) => setUrlDraft(e.target.value)}
+              className="input"
+              placeholder="https://…"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  addUrl();
+                }
+              }}
+            />
+            <button
+              type="button"
+              onClick={addUrl}
+              className="btn-secondary shrink-0"
+            >
+              Add URL
+            </button>
+          </div>
+        </div>
       </div>
+
       <div className="flex gap-6">
         <label className="flex items-center gap-2 text-sm">
           <input
@@ -166,7 +266,11 @@ export function ProductForm({ product }: ProductFormProps) {
         </label>
       </div>
       {error && <p className="text-sm text-red-700">{error}</p>}
-      <button type="submit" className="btn-primary" disabled={loading}>
+      <button
+        type="submit"
+        className="btn-primary"
+        disabled={loading || uploading}
+      >
         {loading ? "Saving…" : product ? "Update product" : "Add product"}
       </button>
     </form>

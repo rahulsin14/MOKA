@@ -1,8 +1,8 @@
-import Image from "next/image";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { formatINR, parseImages } from "@/lib/utils";
 import { DeleteProductButton } from "@/components/admin/DeleteProductButton";
+import { ProductImage } from "@/components/store/ProductImage";
 
 export const dynamic = "force-dynamic";
 
@@ -42,7 +42,7 @@ export default async function AdminProductsPage() {
                     <div className="flex items-center gap-3">
                       <div className="relative h-14 w-12 overflow-hidden bg-[var(--surface)]">
                         {image && (
-                          <Image
+                          <ProductImage
                             src={image}
                             alt={product.name}
                             fill

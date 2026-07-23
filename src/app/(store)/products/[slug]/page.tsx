@@ -1,7 +1,7 @@
-import Image from "next/image";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { AddToCartButton } from "@/components/store/AddToCartButton";
+import { ProductImage } from "@/components/store/ProductImage";
 import { formatINR, parseImages } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -20,10 +20,10 @@ export default async function ProductPage({ params }: Props) {
       <div className="space-y-3">
         {images.map((src, i) => (
           <div
-            key={src + i}
+            key={i}
             className="relative aspect-[4/5] overflow-hidden bg-[var(--surface)]"
           >
-            <Image
+            <ProductImage
               src={src}
               alt={`${product.name} ${i + 1}`}
               fill

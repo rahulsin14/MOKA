@@ -1,9 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { Minus, Plus, X } from "lucide-react";
 import { useCart } from "@/components/providers/CartProvider";
+import { ProductImage } from "@/components/store/ProductImage";
 import { formatINR } from "@/lib/utils";
 
 export function CartDrawer() {
@@ -54,7 +54,7 @@ export function CartDrawer() {
               {items.map((item) => (
                 <li key={item.productId} className="flex gap-4">
                   <div className="relative h-24 w-20 shrink-0 overflow-hidden bg-[var(--surface)]">
-                    <Image
+                    <ProductImage
                       src={item.image}
                       alt={item.name}
                       fill

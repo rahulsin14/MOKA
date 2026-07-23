@@ -2,6 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { ProductCard } from "@/components/store/ProductCard";
+import { ProductImage } from "@/components/store/ProductImage";
+import { parseImages } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -75,8 +77,8 @@ export default async function HomePage() {
               href={`/products/${featured.slug}`}
               className="relative aspect-[4/5] overflow-hidden bg-[var(--surface)]"
             >
-              <Image
-                src={JSON.parse(featured.images)[0]}
+              <ProductImage
+                src={parseImages(featured.images)[0] || "/placeholder-product.svg"}
                 alt={featured.name}
                 fill
                 className="object-cover transition duration-700 hover:scale-105"
