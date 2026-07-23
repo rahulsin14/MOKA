@@ -45,4 +45,4 @@ services:
       - key: NEXT_PUBLIC_RAZORPAY_KEY_ID
         sync: false
       - key: ALLOW_DEMO_PAYMENTS
-        value: "false"
+        value: "true"
