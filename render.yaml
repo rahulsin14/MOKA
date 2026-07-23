@@ -7,7 +7,9 @@
 
 databases:
   - name: moka-db
-    plan: basic_256mb
+    # Valid plans: free | basic-256mb | basic-1gb | basic-4gb | ...
+    # free = $0 for 30 days; basic-256mb = cheapest paid (~$6/mo)
+    plan: free
     databaseName: moka
     user: moka
 
